@@ -38,7 +38,7 @@ FurniView3D is an interactive desktop application that enables users to design f
 
    **Windows:**
    ```
-   --module-path "C:\path\to\javafx-sdk\lib" --add-modules=javafx.controls,javafx.fxml,javafx.graphics,javafx.swing,javafx.web
+   --module-path "C:\path\to\javafx-sdk\lib" --add-modules=javafx.controls,javafx.fxml,javafx.graphics,javafx.swing,javafx.web --enable-native-access=javafx.graphics
    ```
 
    **macOS:**
