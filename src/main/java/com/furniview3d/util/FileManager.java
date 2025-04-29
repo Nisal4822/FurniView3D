@@ -1,6 +1,9 @@
 package main.java.com.furniview3d.util;
 
 import main.java.com.furniview3d.model.Design;
+import main.java.com.furniview3d.model.Room;
+import main.java.com.furniview3d.model.Furniture;
+import main.java.com.furniview3d.model.ColorScheme;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,6 +17,18 @@ public class FileManager {
     private static final String DESIGNS_DIRECTORY = "designs";
     private static final String DESIGN_EXTENSION = ".fvd"; // FurniView Design
 
+    // Create directory if it doesn't exist
+    static {
+        try {
+            Path dirPath = Paths.get(DESIGNS_DIRECTORY);
+            if (!Files.exists(dirPath)) {
+                Files.createDirectories(dirPath);
+            }
+        } catch (IOException e) {
+            System.err.println("Error creating designs directory: " + e.getMessage());
+        }
+    }
+
     /**
      * Saves a design to a file
      * @param design The design to save
@@ -21,6 +36,13 @@ public class FileManager {
      * @throws IOException If an I/O error occurs
      */
     public static void saveDesign(Design design, String filename) throws IOException {
+        if (design == null) {
+            throw new IllegalArgumentException("Design cannot be null");
+        }
+
+        // Validate design contents before saving
+        validateDesign(design);
+
         // Create the designs directory if it doesn't exist
         Path dirPath = Paths.get(DESIGNS_DIRECTORY);
         if (!Files.exists(dirPath)) {
@@ -45,7 +67,14 @@ public class FileManager {
         String fullPath = DESIGNS_DIRECTORY + File.separator + filename + DESIGN_EXTENSION;
 
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(fullPath))) {
-            return (Design) in.readObject();
+            Design design = (Design) in.readObject();
+
+            // Validate and fix any missing components
+            if (design != null) {
+                validateAndFixDesign(design);
+            }
+
+            return design;
         }
     }
 
@@ -55,10 +84,15 @@ public class FileManager {
      */
     public static List<String> getDesignList() {
         List<String> designList = new ArrayList<>();
-
         Path dirPath = Paths.get(DESIGNS_DIRECTORY);
+
         if (!Files.exists(dirPath)) {
-            return designList; // Return empty list if directory doesn't exist
+            try {
+                Files.createDirectories(dirPath);
+            } catch (IOException e) {
+                System.err.println("Error creating designs directory: " + e.getMessage());
+                return designList;
+            }
         }
 
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath, "*" + DESIGN_EXTENSION)) {
@@ -97,6 +131,13 @@ public class FileManager {
      * @throws IOException If an I/O error occurs
      */
     public static void exportDesign(Design design, String path) throws IOException {
+        if (design == null) {
+            throw new IllegalArgumentException("Design cannot be null");
+        }
+
+        // Validate design contents before exporting
+        validateDesign(design);
+
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(path))) {
             out.writeObject(design);
         }
@@ -111,7 +152,14 @@ public class FileManager {
      */
     public static Design importDesign(String path) throws IOException, ClassNotFoundException {
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(path))) {
-            return (Design) in.readObject();
+            Design design = (Design) in.readObject();
+
+            // Validate and fix any missing components
+            if (design != null) {
+                validateAndFixDesign(design);
+            }
+
+            return design;
         }
     }
 
@@ -132,6 +180,7 @@ public class FileManager {
      */
     public static void backupDesigns(String backupPath) throws IOException {
         Path designsDir = Paths.get(DESIGNS_DIRECTORY);
+
         if (!Files.exists(designsDir)) {
             return; // Nothing to backup
         }
@@ -145,6 +194,60 @@ public class FileManager {
             for (Path path : stream) {
                 Path target = Paths.get(backupDir.toString(), path.getFileName().toString());
                 Files.copy(path, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        }
+    }
+
+    /**
+     * Validates a design before saving
+     * @param design The design to validate
+     * @throws IllegalArgumentException If the design is invalid
+     */
+    private static void validateDesign(Design design) {
+        if (design.getName() == null) {
+            throw new IllegalArgumentException("Design name cannot be null");
+        }
+
+        if (design.getRoom() == null) {
+            throw new IllegalArgumentException("Design must have a room");
+        }
+
+        if (design.getFurnitureList() == null) {
+            throw new IllegalArgumentException("Design must have a furniture list (even if empty)");
+        }
+    }
+
+    /**
+     * Validates and fixes a design after loading
+     * @param design The design to validate and fix
+     */
+    private static void validateAndFixDesign(Design design) {
+        // Fix null room
+        if (design.getRoom() == null) {
+            Room room = new Room();
+            room.setName("Default Room");
+            design.setRoom(room);
+        }
+
+        // Fix null furniture list
+        if (design.getFurnitureList() == null) {
+            design.setFurnitureList(new ArrayList<>());
+        }
+
+        // Fix null room color scheme
+        Room room = design.getRoom();
+        if (room.getColorScheme() == null) {
+            room.setColorScheme(new ColorScheme());
+        }
+
+        // Fix any furniture with null colors or materials
+        for (Furniture furniture : design.getFurnitureList()) {
+            if (furniture.getColor() == null) {
+                furniture.setColor(java.awt.Color.GRAY);
+            }
+
+            if (furniture.getMaterial() == null) {
+                furniture.setMaterial("Default");
             }
         }
     }

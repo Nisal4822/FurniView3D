@@ -19,7 +19,6 @@ import java.util.List;
 
 public class DashboardPanel extends JPanel {
     private static final long serialVersionUID = 1L;
-
     private final FurniView3DApp app;
     private JPanel recentDesignsPanel;
     private JPanel actionsPanel;
@@ -57,8 +56,7 @@ public class DashboardPanel extends JPanel {
         welcomePanel.setBackground(Color.WHITE);
         welcomePanel.setBorder(new EmptyBorder(0, 0, 20, 0));
 
-        JLabel welcomeLabel = new JLabel("Welcome to FurniView3D, " + app.getCurrentUserId() + "!");
-        welcomeLabel.setFont(SwingUtils.HEADER_FONT);
+        JLabel welcomeLabel = SwingUtils.createTitleLabel("FurniView3D");
         welcomeLabel.setForeground(SwingUtils.PRIMARY_COLOR);
 
         JLabel subtitleLabel = new JLabel("Design and visualize furniture layouts for your spaces");
@@ -90,7 +88,6 @@ public class DashboardPanel extends JPanel {
         designsListPanel.setBackground(Color.WHITE);
 
         List<String> designNames = FileManager.getDesignList();
-
         if (designNames.isEmpty()) {
             JLabel noDesignsLabel = new JLabel("No recent designs found. Create a new design to get started.");
             noDesignsLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -107,13 +104,11 @@ public class DashboardPanel extends JPanel {
             for (int i = 0; i < count; i++) {
                 DesignListItem designItem = new DesignListItem(designNames.get(i));
                 designsListPanel.add(designItem);
-
                 // Add a separator except after the last item
                 if (i < count - 1) {
                     designsListPanel.add(new JSeparator());
                 }
             }
-
             recentDesignsPanel.add(scrollPane, BorderLayout.CENTER);
         }
 
@@ -128,8 +123,8 @@ public class DashboardPanel extends JPanel {
     }
 
     private void viewAllDesigns() {
-        // TODO: Implement viewing all designs
-        SwingUtils.showInfoDialog(this, "View all designs feature is under development.");
+        // Direct to the Design Management panel
+        app.showPanel("management");
     }
 
     private void createActionsPanel() {
@@ -153,13 +148,10 @@ public class DashboardPanel extends JPanel {
         // Action buttons
         actionsGrid.add(createActionButton("Create New Design", "Create a new room design from scratch",
                 e -> createNewDesign()));
-
         actionsGrid.add(createActionButton("Open Design", "Open an existing room design",
                 e -> openDesign()));
-
         actionsGrid.add(createActionButton("Import Design", "Import a design from an external file",
                 e -> importDesign()));
-
         actionsGrid.add(createActionButton("Settings & Preferences", "Customize application settings",
                 e -> openSettings()));
 
@@ -213,19 +205,26 @@ public class DashboardPanel extends JPanel {
         newDesign.setName("Untitled Design");
         newDesign.setDescription("New design created by " + app.getCurrentUserId());
         newDesign.setDesignerId(app.getCurrentUserId());
-        newDesign.setRoom(new Room());
+
+        // Make sure room is initialized properly
+        Room room = new Room();
+        room.setName("New Room");
+        room.setWidth(5.0);
+        room.setLength(5.0);
+        room.setHeight(2.5);
+        room.setShape("Rectangular");
+        newDesign.setRoom(room);
 
         // Set as current design
         app.setCurrentDesign(newDesign);
 
-        // TODO: Navigate to the design view
-        SwingUtils.showInfoDialog(this, "New design created. This feature is under development.");
+        // Navigate to the room setup panel
+        app.showPanel("roomSetup");
     }
 
     private void openDesign() {
         // Display a list of designs to open
         List<String> designNames = FileManager.getDesignList();
-
         if (designNames.isEmpty()) {
             SwingUtils.showInfoDialog(this, "No saved designs found.");
             return;
@@ -244,21 +243,78 @@ public class DashboardPanel extends JPanel {
         if (selectedDesign != null) {
             try {
                 Design design = FileManager.loadDesign(selectedDesign);
+
+                // Ensure room is properly initialized
+                if (design.getRoom() == null) {
+                    Room room = new Room();
+                    room.setName("Default Room");
+                    room.setWidth(5.0);
+                    room.setLength(5.0);
+                    room.setHeight(2.5);
+                    room.setShape("Rectangular");
+                    design.setRoom(room);
+                }
+
+                // Ensure furniture list is initialized
+                if (design.getFurnitureList() == null) {
+                    design.setFurnitureList(new java.util.ArrayList<>());
+                }
+
                 app.setCurrentDesign(design);
-                SwingUtils.showInfoDialog(this, "Design loaded. Opening view is under development.");
+                app.showPanel("design2D");
             } catch (IOException | ClassNotFoundException e) {
                 SwingUtils.showErrorDialog(this, "Error loading design: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }
 
     private void importDesign() {
-        // TODO: Implement importing a design
-        SwingUtils.showInfoDialog(this, "Import design feature is under development.");
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Import Design");
+        fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+                "FurniView Design Files (*.fvd)", "fvd"));
+
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            try {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                Design design = FileManager.importDesign(filePath);
+
+                // Validate design
+                if (design == null) {
+                    SwingUtils.showErrorDialog(this, "Invalid design file.");
+                    return;
+                }
+
+                // Ensure room is properly initialized
+                if (design.getRoom() == null) {
+                    Room room = new Room();
+                    room.setName("Imported Room");
+                    room.setWidth(5.0);
+                    room.setLength(5.0);
+                    room.setHeight(2.5);
+                    room.setShape("Rectangular");
+                    design.setRoom(room);
+                }
+
+                // Ensure furniture list is initialized
+                if (design.getFurnitureList() == null) {
+                    design.setFurnitureList(new java.util.ArrayList<>());
+                }
+
+                app.setCurrentDesign(design);
+                app.showPanel("design2D");
+
+                SwingUtils.showInfoDialog(this, "Design imported successfully.");
+            } catch (Exception e) {
+                SwingUtils.showErrorDialog(this, "Error importing design: " + e.getMessage());
+                e.printStackTrace();
+            }
+        }
     }
 
     private void openSettings() {
-        // TODO: Implement settings
         SwingUtils.showInfoDialog(this, "Settings feature is under development.");
     }
 
@@ -299,6 +355,7 @@ public class DashboardPanel extends JPanel {
             } catch (Exception e) {
                 // Do nothing, use default text
             }
+
             dateLabel.setFont(SwingUtils.SMALL_FONT);
             dateLabel.setForeground(Color.GRAY);
 
@@ -335,13 +392,32 @@ public class DashboardPanel extends JPanel {
 
         private void openDesignItem(String designName) {
             try {
+                // Load the design
                 Design design = FileManager.loadDesign(designName);
+
+                // Perform validations and ensure all properties are properly initialized
+                if (design.getRoom() == null) {
+                    Room room = new Room();
+                    room.setName("Default Room");
+                    room.setWidth(5.0);
+                    room.setLength(5.0);
+                    room.setHeight(2.5);
+                    room.setShape("Rectangular");
+                    design.setRoom(room);
+                }
+
+                if (design.getFurnitureList() == null) {
+                    design.setFurnitureList(new java.util.ArrayList<>());
+                }
+
+                // Set the current design in the application
                 app.setCurrentDesign(design);
-                SwingUtils.showInfoDialog(DashboardPanel.this,
-                        "Design '" + designName + "' loaded. Opening view is under development.");
+
+                // Navigate to the 2D design view
+                app.showPanel("design2D");
             } catch (IOException | ClassNotFoundException e) {
-                SwingUtils.showErrorDialog(DashboardPanel.this,
-                        "Error loading design: " + e.getMessage());
+                SwingUtils.showErrorDialog(DashboardPanel.this, "Error loading design: " + e.getMessage());
+                e.printStackTrace();
             }
         }
     }

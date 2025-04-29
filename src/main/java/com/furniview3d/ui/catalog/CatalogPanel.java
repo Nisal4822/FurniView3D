@@ -286,7 +286,7 @@ public class CatalogPanel extends JPanel implements FurnitureController.Furnitur
 
     private void showAddFurnitureDialog() {
         // Create a dialog for adding new furniture
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Add New Furniture", true);
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Add New Furniture", true);
         dialog.setSize(400, 350);
         SwingUtils.centerWindow(dialog);
 
@@ -430,7 +430,7 @@ public class CatalogPanel extends JPanel implements FurnitureController.Furnitur
         }
 
         // Similar to add dialog, but pre-populated with current values
-        JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "Edit Furniture", true);
+        JDialog dialog = new JDialog((Frame) SwingUtilities.getWindowAncestor(this), "Edit Furniture", true);
         dialog.setSize(400, 350);
         SwingUtils.centerWindow(dialog);
 

@@ -1,5 +1,6 @@
 package main.java.com.furniview3d.controller;
 
+import main.java.com.furniview3d.FurniView3DApp;
 import main.java.com.furniview3d.model.ColorScheme;
 import main.java.com.furniview3d.model.Design;
 import main.java.com.furniview3d.model.Room;
@@ -13,8 +14,8 @@ import java.util.List;
  * Controller class for handling room operations in the FurniView3D application
  */
 public class RoomController {
-
     private Design currentDesign;
+    private FurniView3DApp app; // Add reference to the app
     private List<RoomChangeListener> listeners = new ArrayList<>();
 
     // Available room shapes
@@ -30,11 +31,13 @@ public class RoomController {
     );
 
     /**
-     * Constructor with current design
+     * Constructor with current design and app reference
      * @param design The current design containing the room to control
+     * @param app The main application
      */
-    public RoomController(Design design) {
+    public RoomController(Design design, FurniView3DApp app) {
         this.currentDesign = design;
+        this.app = app;
     }
 
     /**
@@ -65,6 +68,12 @@ public class RoomController {
         room.setWidth(width);
         room.setLength(length);
         room.setHeight(height);
+
+        // Notify app that design has changed
+        if (app != null) {
+            app.setCurrentDesign(currentDesign);
+        }
+
         notifyListeners();
     }
 
@@ -79,6 +88,12 @@ public class RoomController {
 
         Room room = currentDesign.getRoom();
         room.setShape(shape);
+
+        // Notify app that design has changed
+        if (app != null) {
+            app.setCurrentDesign(currentDesign);
+        }
+
         notifyListeners();
     }
 
@@ -89,6 +104,12 @@ public class RoomController {
     public void updateRoomName(String name) {
         Room room = currentDesign.getRoom();
         room.setName(name);
+
+        // Notify app that design has changed
+        if (app != null) {
+            app.setCurrentDesign(currentDesign);
+        }
+
         notifyListeners();
     }
 
@@ -102,6 +123,12 @@ public class RoomController {
             if (scheme.getName().equalsIgnoreCase(schemeName)) {
                 Room room = currentDesign.getRoom();
                 room.setColorScheme(scheme);
+
+                // Notify app that design has changed
+                if (app != null) {
+                    app.setCurrentDesign(currentDesign);
+                }
+
                 notifyListeners();
                 return true;
             }
@@ -119,11 +146,15 @@ public class RoomController {
     public void updateColorScheme(Color wallColor, Color floorColor, Color ceilingColor, Color accentColor) {
         Room room = currentDesign.getRoom();
         ColorScheme scheme = room.getColorScheme();
-
         scheme.setWallColor(wallColor);
         scheme.setFloorColor(floorColor);
         scheme.setCeilingColor(ceilingColor);
         scheme.setAccentColor(accentColor);
+
+        // Notify app that design has changed
+        if (app != null) {
+            app.setCurrentDesign(currentDesign);
+        }
 
         notifyListeners();
     }
@@ -151,6 +182,12 @@ public class RoomController {
     public Room createNewRoom() {
         Room room = new Room();
         currentDesign.setRoom(room);
+
+        // Notify app that design has changed
+        if (app != null) {
+            app.setCurrentDesign(currentDesign);
+        }
+
         notifyListeners();
         return room;
     }
