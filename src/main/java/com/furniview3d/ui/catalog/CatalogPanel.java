@@ -267,11 +267,11 @@ public class CatalogPanel extends JPanel implements FurnitureController.Furnitur
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         buttonPanel.setBackground(Color.WHITE);
 
-        JButton addToDesignButton = SwingUtils.createPrimaryButton("Add to Design", e -> addToDesign());
+        //JButton addToDesignButton = SwingUtils.createPrimaryButton("Add to Design", e -> addToDesign());
         JButton editButton = SwingUtils.createSecondaryButton("Edit", e -> editFurniture());
         JButton deleteButton = SwingUtils.createSecondaryButton("Delete", e -> deleteFurniture());
 
-        buttonPanel.add(addToDesignButton);
+        //buttonPanel.add(addToDesignButton);
         buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
 
@@ -379,6 +379,7 @@ public class CatalogPanel extends JPanel implements FurnitureController.Furnitur
                 );
 
                 furnitureController.addFurniture(newFurniture);
+                furnitureController.saveCatalog();
                 dialog.dispose();
 
                 // Refresh catalog view
@@ -517,6 +518,9 @@ public class CatalogPanel extends JPanel implements FurnitureController.Furnitur
                 String type = (String) typeComboBox.getSelectedItem();
                 String material = (String) materialComboBox.getSelectedItem();
                 Color color = colorButton.getBackground();
+
+
+
 
                 furnitureController.updateFurniture(
                         selectedFurniture.getId(), name, type,

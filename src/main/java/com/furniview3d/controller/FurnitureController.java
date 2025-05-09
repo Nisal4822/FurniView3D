@@ -77,7 +77,7 @@ public class FurnitureController {
         saveCatalog();
     }
 
-    private Furniture createFurniture(String name, String type, double width, double length,
+    public Furniture createFurniture(String name, String type, double width, double length,
                                       double height, Color color, String material) {
         Furniture furniture = new Furniture(name, type, width, length, height, color, material,
                 "resources/images/furniture/" + type.toLowerCase() + ".png",
@@ -193,6 +193,9 @@ public class FurnitureController {
                 furnitureByType.get(type).add(furniture);
             }
 
+            // Save changes to file
+            saveCatalog();
+
             // Notify listeners
             notifyListeners();
         }
@@ -210,8 +213,11 @@ public class FurnitureController {
     private void loadCatalog() {
         File file = new File(CATALOG_FILE);
         if (!file.exists()) {
+            System.out.println("catalog file not found");
             return; // No catalog file yet
         }
+
+        System.out.println("catalog file found");
 
         try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(CATALOG_FILE))) {
             furnitureCatalog = (List<Furniture>) in.readObject();
